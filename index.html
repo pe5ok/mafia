@@ -5,37 +5,52 @@
         <link href="./style.css" rel="stylesheet">
         <style>
             .timer{
-                background-color: brown;
+                padding: 12px;
+                background-color:transparent;
+                display: inline-block;
                 box-sizing: border-box;
+                background-color: #333;
             }
             .timer>button{
+                background-color: transparent;
+                color:#aaa;
+                border: solid #aaa 2px;
                 box-sizing: border-box;
                 text-align: center;
-                color: inherit;
                 font-size: inherit;
                 padding: 12px;
+                margin-right: 7px;
                 width: 70px;
+                transition: all 0.3s ease-out;
+            }
+            .timer>button:active{
+                background-color: #aaa;
+                border: 5px;
+                color:#000;
             }
             .timer>div{
-                width: auto;
+                color: #aaa;
                 display: inline;
             }
         </style>
-    </head>
+    </head> 
 <body class="body">
     <div class="profile_table">
-        <div class="profile">
-            <h1>Player 1</h1>
-        </div>
-        <div class="profile">ayooo</div>
-        <div class="profile">ayooo</div>
-        <div class="profile">ayooo</div>
-        <div class="profile">ayooo</div>
-        <div class="profile">ayooo</div>
-        <div class="profile">ayooo</div>
+        <div class="profile"></div>
+        <div class="profile"></div>
+        <div class="profile"></div>
+        <div class="profile"></div>
+        <div class="profile"></div>
+        <div class="profile"></div>
+        <div class="profile"></div>
     </div>
-    <div class="timer">
+    <div style="background:#333;display:flex">
+        <div class="timer"></div>
+        <button style="margin-left: auto;">restart</button>
+        <button>flip</button>
+        <button>settings</button>
     </div>
+    
     <script src="script.js"></script>
     <script>class Timer{
         basecounter = 600;

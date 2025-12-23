@@ -1,11 +1,17 @@
 .profile{
+    margin: 10px;
+    padding: 0px;
+    justify-content: center;
+}
+.profile>.obverse,
+.profile>.reverse{
     width: calc(max(100px,min(200px, 30vw)));
     height:  calc(max(100px,min(200px, 30vh)));
-    background-color: darkslategrey;
+    background-color: #333;
     text-align: center;
     box-sizing: border-box;
     padding: 10px;
-    margin: 10px;
+    margin: 0px;
     justify-content: center;
 }
 .profile_table{
@@ -16,7 +22,7 @@
 .body{
     font-size: 16px;
     font-family: 'Courier New', Courier, monospace;
-    background-color: grey;
+    background-color: #222
 }
 .body h1{
     font-size: 24px;
