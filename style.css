@@ -1,0 +1,26 @@
+.profile{
+    width: calc(max(100px,min(200px, 30vw)));
+    height:  calc(max(100px,min(200px, 30vh)));
+    background-color: darkslategrey;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 10px;
+    margin: 10px;
+    justify-content: center;
+}
+.profile_table{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.body{
+    font-size: 16px;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: grey;
+}
+.body h1{
+    font-size: 24px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
