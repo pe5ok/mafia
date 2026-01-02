@@ -7,6 +7,7 @@
 .profile>.reverse{
     width: calc(max(100px,min(200px, 30vw)));
     height:  calc(max(100px,min(200px, 30vh)));
+    color: #aaa;
     background-color: #333;
     text-align: center;
     box-sizing: border-box;
@@ -18,6 +19,34 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+}
+.timer{
+    padding: 12px;
+    background-color:transparent;
+    display: inline-block;
+    box-sizing: border-box;
+    background-color: #333;
+}
+.panel_button{
+    font-family: 'Courier New', Courier, monospace;
+    background-color: transparent;
+    color:#aaa;
+    border: solid #aaa 2px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: inherit;
+    padding: 12px;
+    margin-right: 7px;
+    height: 40px;
+    transition: all 0.3s ease-out;
+}
+.panel_button:active{
+    background-color: #aaa;
+    color:#000;
+}
+.timer>div{
+    color: #aaa;
+    display: inline;
 }
 .body{
     font-size: 16px;

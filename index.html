@@ -4,102 +4,36 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="./style.css" rel="stylesheet">
         <style>
-            .timer{
-                padding: 12px;
-                background-color:transparent;
-                display: inline-block;
-                box-sizing: border-box;
-                background-color: #333;
-            }
-            .timer>button{
-                background-color: transparent;
-                color:#aaa;
-                border: solid #aaa 2px;
-                box-sizing: border-box;
-                text-align: center;
-                font-size: inherit;
-                padding: 12px;
-                margin-right: 7px;
-                width: 70px;
-                transition: all 0.3s ease-out;
-            }
-            .timer>button:active{
-                background-color: #aaa;
-                border: 5px;
-                color:#000;
-            }
-            .timer>div{
-                color: #aaa;
-                display: inline;
-            }
+            
         </style>
     </head> 
 <body class="body">
     <div class="profile_table">
-        <div class="profile"></div>
-        <div class="profile"></div>
-        <div class="profile"></div>
-        <div class="profile"></div>
-        <div class="profile"></div>
-        <div class="profile"></div>
-        <div class="profile"></div>
     </div>
-    <div style="background:#333;display:flex">
+    <div style="background:#333;display:flex;align-items: center;">
         <div class="timer"></div>
-        <button style="margin-left: auto;">restart</button>
-        <button>flip</button>
-        <button>settings</button>
+        <button class="panel_button" onclick="restart()" style="margin-left: auto;">restart</button>
+        <button class="panel_button" onclick="flip()">flip</button>
+        <button class="panel_button">settings</button>
+    </div>
+    <div style="background:#333;display:flex;align-items: center;">
+        <div>Accused players:</div><button class="panel_button">clear</button>
     </div>
     
     <script src="script.js"></script>
-    <script>class Timer{
-        basecounter = 600;
-        setCounter(x){
-            this.counter = x
-            this.display.innerText = (x/10|0)+"."+x%10+"s"
-        }
-        getCounter(){
-            return this.counter
-        }
-        subtractCounter(){
-            this.setCounter(this.getCounter()-1)
-        }
-        constructor(el){
-            this.timer = null;
-            this.start_stop = document.createElement("button")
-            this.start_stop.innerText="start"
-            el.appendChild(this.start_stop)
-            this.reset = document.createElement("button")
-            this.reset.innerText="reset"
-            el.appendChild(this.reset)
-            this.display = document.createElement("div")
-            el.appendChild(this.display)
-            this.setCounter(this.basecounter);
-            this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
-            this.reset.addEventListener("click",()=>this.timer_reset())
-        }
-        timer_start(){
-            if(this.getCounter()===0 || !(this.timer === null))this.timer_reset()
-            this.timer = setInterval((context)=>{
-                this.subtractCounter();
-                if(context.getCounter()===0)context.timer_stop();
-            },100,this)
-            this.start_stop.addEventListener("click",()=>this.timer_stop(),{once:true})
-            this.start_stop.innerText="stop"
-        }
-        timer_stop(){
-            clearInterval(this.timer)
-            this.timer=null
-            this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
-            this.start_stop.innerText="start"
-        }
-        timer_reset(){
-            if(!(this.timer === null))this.timer_stop();
-            this.setCounter(this.basecounter);
-        }
-    }
-    timers = Array.from(document.getElementsByClassName("timer"))
-    timers.forEach(timer =>new Timer(timer))</script>
+    <script>
+        timers = Array.from(document.getElementsByClassName("timer"))
+        timers.forEach(timer =>new Timer(timer))
+        players = [
+            ["innocent",6],
+            ["comm",1],
+            ["don",1],
+            ["mafia",2]
+        ]
+        profiles = new Array(0)
+        profile_table = document.getElementsByClassName("profile_table")[0]
+        restart()
+    </script>
 </div>
 </body>
 </html>
