@@ -1,0 +1,18 @@
+class timer
+class profile:
+    public:
+        unvote(used by election)
+        vote
+        kill
+        revive
+        flip(used by flip)
+class election:
+    public:
+        clear
+        add(used by profile)
+        remove(used by profile)
+fun settings:
+
+fun flip:
+
+fun restart:

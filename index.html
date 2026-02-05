@@ -2,6 +2,8 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <!--<script src="jquery-4.0.0.min.js"></script>-->
         <link href="./style.css" rel="stylesheet">
         <style>
             
@@ -12,18 +14,17 @@
     </div>
     <div style="background:#333;display:flex;align-items: center;">
         <div class="timer"></div>
-        <button class="panel_button" onclick="restart()" style="margin-left: auto;">restart</button>
+        <button class="panel_button reset" id="reset" style="margin-left: auto;">restart</button>
         <button class="panel_button" onclick="flip()">flip</button>
         <button class="panel_button">settings</button>
     </div>
-    <div style="background:#333;display:flex;align-items: center;">
-        <div>Accused players:</div><button class="panel_button">clear</button>
+    <div class="panel election_list" style="background:#333;display:flex;align-items: center;">
     </div>
-    
     <script src="script.js"></script>
+    <script src="timer.js"></script>
     <script>
-        timers = Array.from(document.getElementsByClassName("timer"))
-        timers.forEach(timer =>new Timer(timer))
+        $(".timer").each((index,element)=>new Timer(element))
+        election = new Election($(".election_list")[0])
         players = [
             ["innocent",6],
             ["comm",1],
@@ -32,6 +33,25 @@
         ]
         profiles = new Array(0)
         profile_table = document.getElementsByClassName("profile_table")[0]
+        function handler(elem){
+            let cancelId = -1
+            function restartEL() {
+                restart()
+            }
+            function cancelEL(e) {
+                clearTimeout(cancelId)
+                e.currentTarget.style.color = "#aaa"
+                e.currentTarget.style.animation = "none"
+                $(e.currentTarget).off("mouseup", cancelEL).off("mouseleave", cancelEL)
+            }
+            $(elem).on("mousedown", (e) => {
+                e.currentTarget.style.animation = "reddy 0.4s ease-in both"
+                e.currentTarget.style.color = "#222"
+                $(e.currentTarget).one("mouseup", cancelEL).one("mouseleave", cancelEL)
+                cancelId = setTimeout(restartEL, 400)
+            })
+        }
+        handler($("#reset")[0])
         restart()
     </script>
 </div>

@@ -1,52 +1,49 @@
 class Profile{
-    constructor(el, ind, rl){
-        this.obverse = document.createElement("div")
-        this.obverse.className="obverse"
-        this.reverse = document.createElement("div")
-        this.reverse.className="reverse"
+    constructor(el, ind, rl, elec){
+        this.index=ind
+        this.obverse=$("<div></div>")
+                    .addClass("obverse")
+                    .append($(`<h1>Player ${ind}</h1>`))[0]
+        this.reverse=$("<div></div>")
+                    .addClass("reverse")
+                    .append($(`<h1>Player ${ind}</h1>`))
+                    .append($(`<div>${rl}</div>`))
+                    .hide()[0]
         this.obverse.addEventListener("click",()=>{
-            this.obverse.style.display = "none"
-            this.reverse.style.display = "block"    
+            $(this.obverse).hide()
+            $(this.reverse).show()
         })
         this.reverse.addEventListener("click",()=>{
-            this.reverse.style.display = "none"
-            this.obverse.style.display = "block"    
+            $(this.reverse).hide()
+            $(this.obverse).show()
         })
-        this.obverse.style.display = "block"
-        this.reverse.style.display = "none"
-        this.h1 = document.createElement("div")
-        this.h1.innerText="Player "+ind
-        this.obverse.appendChild(this.h1)
-        this.h1 = document.createElement("div")
-        this.h1.innerText="Player "+ind
-        this.reverse.appendChild(this.h1)
-        el.appendChild(this.obverse)
-        el.appendChild(this.reverse)
-
-        this.role = document.createElement("div")
-        this.role.innerText = rl
-        this.reverse.appendChild(this.role)
-
-        this.vote = document.createElement("button")
+        this.vote=$("<button>vote</button>")[0]
+        this.unvote=$("<button>unvote</button>").hide()[0]
+        this.kill=$("<button>kill</button>")[0]
+        this.revive=$("<button>revive</button>").hide()[0]
         this.vote.addEventListener("click",(e)=>{
+            this.Vote()
             e.stopPropagation()
-            console.log("vote");
         })
-        this.vote.classList.add("panel_button")
-        this.vote.innerText = "vote"
-        this.obverse.appendChild(this.vote);
-
-        this.kill = document.createElement("button")
+        this.unvote.addEventListener("click",(e)=>{
+            this.Unvote()
+            e.stopPropagation()
+        })
         this.kill.addEventListener("click",(e)=>{
+            this.Kill()
             e.stopPropagation()
-            console.log("kill");
         })
-        this.kill.classList.add("panel_button")
-        this.kill.innerText = "kill"
-        this.obverse.appendChild(this.kill);
-    }
+        this.revive.addEventListener("click",(e)=>{
+            this.Revive()
+            e.stopPropagation()
+        })
+        $(this.obverse).append(this.vote, this.unvote, this.kill, this.revive)
+        $(el)
+            .append(this.obverse)
+            .append(this.reverse)
+    }    
     IsObverse(){
-        return this.obverse.style.display=="block"
+        return !(this.obverse.style.display=="none")
     }
     Flip(){
         if(this.IsObverse()){
@@ -55,60 +52,55 @@ class Profile{
             this.reverse.dispatchEvent(new Event("click"))
         }
     }
+    Vote(){
+        $(this.vote).hide()
+        $(this.unvote).show()
+        election.Add(this)
+    }
+    Unvote(){
+        $(this.unvote).hide()
+        $(this.vote).show()
+        election.Remove(this)
+    }
+    Kill(){
+        $(this.kill).hide()
+        $(this.revive).show()
+        this.Unvote()
+        $(this.vote).hide()
+    }
+    Revive(){
+        $(this.revive).hide()
+        $(this.kill).show()
+        $(this.vote).show()
+    }
 }
-class Timer{
-    basecounter = 600;
-    setCounter(x){
-        this.counter = x
-        this.display.innerText = (x/10|0)+"."+x%10+"s"
-    }
-    getCounter(){
-        return this.counter
-    }
-    subtractCounter(){
-        this.setCounter(this.getCounter()-1)
-    }
+class Election{
+    list = new Array()
     constructor(el){
-        this.timer = null;
-        this.start_stop = document.createElement("button")
-        this.start_stop.classList.add("panel_button")
-        this.start_stop.innerText="start"
-        el.appendChild(this.start_stop)
-        this.reset = document.createElement("button")
-        this.reset.classList.add("panel_button")
-        this.reset.innerText="reset"
-        el.appendChild(this.reset)
-        this.display = document.createElement("div")
-        el.appendChild(this.display)
-        this.setCounter(this.basecounter);
-        this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
-        this.reset.addEventListener("click",()=>this.timer_reset())
+        this.element=el
+        $(el).append($(`<div>Accused players:</div>`)).append($(`<button>clear</button>`).addClass("panel_button"))
+        $(el)[0].children[1].addEventListener("click", (e)=>{this.Clear()})
     }
-    timer_start(){
-        if(this.getCounter()===0 || !(this.timer === null))this.timer_reset()
-        this.timer = setInterval((context)=>{
-            this.subtractCounter();
-            if(context.getCounter()===0)context.timer_stop();
-        },100,this)
-        this.start_stop.addEventListener("click",()=>this.timer_stop(),{once:true})
-        this.start_stop.innerText="stop"
+    Update(){
+        this.element.children[0].innerHTML=`Accused players: ${this.list.map(x=>x.index).join(',')}`
     }
-    timer_stop(){
-        clearInterval(this.timer)
-        this.timer=null
-        this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
-        this.start_stop.innerText="start"
+    Add(e){
+        this.list.push(e)
+        this.Update()
     }
-    timer_reset(){
-        if(!(this.timer === null)){
-            this.start_stop.dispatchEvent(new Event("click"))
-        }
-        this.setCounter(this.basecounter);
+    Remove(e){
+        i=this.list.indexOf(e)
+        if(i==-1)return
+        this.list.splice(i,1)
+        this.Update()
+    }
+    Clear(){
+        while(this.list.length>0)this.list[this.list.length-1].Unvote()
     }
 }
-
 function restart(){
-    Array.from(profile_table.children).forEach(e=>e.remove())
+    election.Clear()
+    $(profile_table).empty()
     profiles.splice(0, profiles.length)
     _a = new Array(0)
     players.forEach(key=>{
@@ -124,9 +116,8 @@ function restart(){
         [_a[i],_a[rv[i]]]=[_a[rv[i]],_a[i]];
     }
     for(i=0;i<_a.length;++i){
-        profile = document.createElement("div")
-        profile.classList.add("profile")
-        profile_table.appendChild(profile)
+        profile=$(`<div></div>`).addClass("profile")[0]
+        $(profile_table).append(profile)
         profiles.push(new Profile(profile, i+1, _a[i]))
     }
 }

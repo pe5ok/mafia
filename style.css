@@ -40,10 +40,7 @@
     height: 40px;
     transition: all 0.3s ease-out;
 }
-.panel_button:active{
-    background-color: #aaa;
-    color:#000;
-}
+
 .timer>div{
     color: #aaa;
     display: inline;
@@ -58,4 +55,18 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+.reset{
+    background-image: linear-gradient(#aaa);
+	background-repeat: no-repeat;
+	background-size: 0% 100%;
+}
+@keyframes reddy {
+	from {
+		background-size: 0% 100%
+	}
+	to {
+		background-size: 100% 100%
+	}
 }
