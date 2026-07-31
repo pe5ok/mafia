@@ -1,59 +1,436 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <!--<script src="jquery-4.0.0.min.js"></script>-->
-        <link href="./style.css" rel="stylesheet">
-        <style>
-            
-        </style>
-    </head> 
-<body class="body">
-    <div class="profile_table">
-    </div>
-    <div style="background:#333;display:flex;align-items: center;">
-        <div class="timer"></div>
-        <button class="panel_button reset" id="reset" style="margin-left: auto;">restart</button>
-        <button class="panel_button" onclick="flip()">flip</button>
-        <button class="panel_button">settings</button>
-    </div>
-    <div class="panel election_list" style="background:#333;display:flex;align-items: center;">
-    </div>
-    <script src="script.js"></script>
-    <script src="timer.js"></script>
-    <script>
-        $(".timer").each((index,element)=>new Timer(element))
-        election = new Election($(".election_list")[0])
-        players = [
-            ["innocent",6],
-            ["comm",1],
-            ["don",1],
-            ["mafia",2]
-        ]
-        profiles = new Array(0)
-        profile_table = document.getElementsByClassName("profile_table")[0]
-        function handler(elem){
-            let cancelId = -1
-            function restartEL() {
-                restart()
-            }
-            function cancelEL(e) {
-                clearTimeout(cancelId)
-                e.currentTarget.style.color = "#aaa"
-                e.currentTarget.style.animation = "none"
-                $(e.currentTarget).off("mouseup", cancelEL).off("mouseleave", cancelEL)
-            }
-            $(elem).on("mousedown", (e) => {
-                e.currentTarget.style.animation = "reddy 0.4s ease-in both"
-                e.currentTarget.style.color = "#222"
-                $(e.currentTarget).one("mouseup", cancelEL).one("mouseleave", cancelEL)
-                cancelId = setTimeout(restartEL, 400)
-            })
+<head>
+    <title>mafia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            color: #aaa;
         }
-        handler($("#reset")[0])
-        restart()
+        body{
+            background-color: #222;
+        }
+        .profileSpace{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+        .controlsSpace{
+            width: 100%;
+            padding: 8px 16px;
+            display: flex;
+            background-color: #333;
+        }
+        .electionSpace{
+            width: 100%;
+            display: flex;
+            padding: 8px 16px;
+            margin-top: 5px;
+            background-color: #333;
+            align-items: center;
+        }
+        .electionSpace button{
+            margin-left: auto;
+        }
+        .deadListSpace{
+            width: 100%;
+            margin-top: 5px;
+            padding: 8px 16px;
+            background-color: #333;
+        }
+        .timer .display{
+            display: inline;
+        }
+        .profile{
+            margin: 10px;
+            padding: 10px;
+            width: calc(max(100px,min(200px, 30vw)));
+            height: calc(max(100px,min(200px, 30vh)));
+            
+            background-color: #333;
+            text-align: center;
+            box-sizing: border-box;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        h2, h3{
+            font-size: 24px;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-weight: normal;
+        }
+        h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        button{
+            background-color: transparent;
+            color:#aaa;
+            border: solid #aaa 2px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: inherit;
+            padding: 12px;
+            height: 40px;
+            transition: all 0.3s ease-out;
+        }
+        button:active{
+            background-color: #aaa;
+        }
+        button:hover{
+            text-decoration: underline;
+        }
+
+        .profile .role{
+            display: none;
+        }
+        .profile .vote, .profile .kill{
+            display: inline-block;
+        }
+        .reverse .role{
+            display: block;
+        }
+        .reverse .vote, .reverse .kill{
+            display: none;
+        }
+
+        .deadNote{
+            margin-left: 8px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .revive{
+            margin-left: auto;
+        }
+
+        .hide{
+            display: none;
+        }
+        #restart{
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="profileSpace"></div>
+    <div class="controlsSpace">
+        <div class="timer"></div>
+        <button id="restart">restart</button>
+        <button id="flip">flip</button>
+        <button id="settings">settings</button>
+    </div>
+    <div class="electionSpace">
+        <div></div>
+        <button>clear</button>
+    </div>
+    <div class="deadListSpace">
+        <h3>killed players:</h3>
+    </div>
+    <template id="profileTemplate">
+        <div class="profile">
+            <h2>player <span></span></h2>
+            <button class="vote">vote</button>
+            <button class="kill">kill</button>
+            <div class="role">placerole</div>
+        </div>
+        <div class="deadNote">
+            <div>player <span></span>, role: <span></span></div>
+            <button class="revive">revive</button>
+        </div>
+    </template>
+    <script>
+        class GameConfig{
+            roleList={
+                "don":1,
+                "mafia":2,
+                "comm":1,
+                "innocent":6
+            };
+        }
+        class SimpleElectionFacade{
+            #space
+            #server
+            #state
+            constructor(element, server){
+                this.#server=server
+                this.#space=element
+                this.#space.children[0].innerHTML = `accused players: `
+                this.#space.children[1].addEventListener("click",()=>{
+                    this.#server.clearElection()
+                })
+            }
+            dispose(){
+                this.#space.children[0].innerHTML = `accused players: `
+            }
+            get state(){
+                return this.#state
+            }
+            set state(_state){
+                this.#state=_state
+                this.#space.children[0].innerHTML = `accused players: ${this.#state.map(x=>x).join(', ')}`
+            }
+        }
+        class GameServer{
+            #config
+            #playerFacades=new Array(0)
+            #electionFacade
+            #isAlive
+            #accusedPlayers=new Array(0)
+            constructor(gameConfig, PlayerFacade, ElectionFacade){
+                this.#config = gameConfig
+                let playerRoles = new Array(0)
+                Object.keys(gameConfig.roleList).forEach((role)=>{
+                    for(let i=0;i<gameConfig.roleList[role];i+=1)
+                    playerRoles.push(role)
+                })
+                var rv=new Uint32Array(playerRoles.length);
+                crypto.getRandomValues(rv)
+                for(let i=playerRoles.length-1;i>=0;--i){
+                    rv[i]%=i+1;
+                    [playerRoles[i],playerRoles[rv[i]]]=[playerRoles[rv[i]],playerRoles[i]];
+                }
+                this.#playerFacades.push(null)
+                for(let i=1;i<=playerRoles.length;i+=1){
+                    this.#playerFacades.push(new PlayerFacade(this,i,playerRoles[i-1])) 
+                }
+                this.#isAlive = new Array(this.#playerFacades.length).fill(true)
+                this.#electionFacade = new ElectionFacade(document.getElementsByClassName("electionSpace")[0], this)
+            }
+            dispose(){
+                for(let i=1;i<this.#playerFacades.length;i+=1){
+                    this.#playerFacades[i].dispose()
+                }
+                this.#electionFacade.dispose()
+            }
+            kill(index){
+                if(index<0 || index>=this.#playerFacades.length){
+                    throw Error("Index out of range")
+                }
+                if(this.#accusedPlayers.includes(index)){
+                    this.unaccuse(index)
+                }
+                this.#isAlive[index]=false
+                this.#playerFacades[index].state=ProfileFacade.State.Dead
+            }
+            revive(index){
+                if(index<0 || index>=this.#playerFacades.length){
+                    throw Error("Index out of range")
+                }
+                this.#isAlive[index]=true
+                this.#playerFacades[index].state=ProfileFacade.State.Neutral
+            }
+            accuse(index){
+                if(index<0 || index>=this.#playerFacades.length){
+                    throw Error("Index out of range")
+                }
+                if(!this.#isAlive[index]){
+                    throw Error("Dead can't be accused")
+                }
+                if(this.#accusedPlayers.includes(index)){
+                    throw Error("Player already accused")
+                }
+                this.#accusedPlayers.push(index)
+                this.#playerFacades[index].state=ProfileFacade.State.Accused
+                this.#electionFacade.state = this.#accusedPlayers
+            }
+            unaccuse(index){
+                if(index<0 || index>=this.#playerFacades.length){
+                    throw Error("Index out of range")
+                }
+                if(!this.#isAlive[index]){
+                    throw Error("Dead can't be unaccused")
+                }
+                if(!this.#accusedPlayers.includes(index)){
+                    throw Error("Player is not accused")
+                }
+                let i=this.#accusedPlayers.indexOf(index)
+                if(i!=-1){
+                    this.#accusedPlayers.splice(i,1)
+                }
+                this.#playerFacades[index].state=ProfileFacade.State.Neutral
+                this.#electionFacade.state = this.#accusedPlayers
+            }
+            clearElection(){
+                while(this.#accusedPlayers.length>0){
+                    this.unaccuse(this.#accusedPlayers[0])
+                }
+            }
+        }
+        class ProfileFacade{
+            constructor(){
+                if(new.target===ProfileFacade){
+                    throw Error("Not Implemented")
+                }
+            }
+            dispose(){
+                throw Error("Not Implemented")
+            }
+            static State = Object.freeze({
+                Neutral:0,
+                Accused:1,
+                Dead:2
+            })
+            get state(){
+                throw Error("Not Implemented")
+            }
+            set state(_state){
+                throw Error("Not Implemented")
+            }
+        }
+        class SimpleProfileFacade extends ProfileFacade{
+            #index
+            #state
+            #server
+            #alive
+            #dead
+            constructor(server,index,role){
+                super()
+                console.log(server)
+                this.#server=server
+                this.#index=index
+                console.log(`facade ${index} created, role: ${role}`)
+                let template = document.getElementById("profileTemplate").content.cloneNode(true)
+                this.#alive=template.children[0]
+                this.#alive.getElementsByTagName("span")[0].innerHTML=index
+                this.#alive.getElementsByClassName("role")[0].innerHTML=role
+                this.#alive.addEventListener("click",(event)=>{
+                    event.currentTarget.classList.toggle("reverse")
+                })
+                this.#alive.getElementsByClassName("vote")[0].addEventListener("click",(event)=>{
+                    try{
+                        switch (this.#state){
+                            case ProfileFacade.State.Neutral:
+                                this.#server.accuse(this.#index)
+                                break
+                            case ProfileFacade.State.Accused:
+                                this.#server.unaccuse(this.#index)
+                                break
+                        }
+                    }catch(e){console.log(e)}
+                    event.stopPropagation()  
+                })
+                this.#alive.getElementsByClassName("kill")[0].addEventListener("click",(event)=>{
+                    try{this.#server.kill(this.#index)}catch(e){console.log(e)}
+                    event.stopPropagation()  
+                })
+                document.getElementsByClassName("profileSpace")[0].appendChild(this.#alive)
+                this.#dead=template.children[0]
+                this.#dead.getElementsByTagName("span")[0].innerHTML=index
+                this.#dead.getElementsByTagName("span")[1].innerHTML=role
+                this.#dead.getElementsByClassName("revive")[0].addEventListener("click",(event)=>{
+                    try{
+                        this.#server.revive(this.#index)
+                    }catch(e){console.log(e)}
+                })
+                this.#dead.classList.toggle("hide")
+                document.getElementsByClassName("deadListSpace")[0].appendChild(this.#dead)
+                this.state=ProfileFacade.State.Neutral
+            }
+            dispose(){
+                console.log(`facade ${this.#index} disposed`)
+                this.#dead.remove()
+                this.#alive.remove()
+            }
+            set state(_state){
+                console.log(`facade ${this.#index} set state ${_state}`)
+                if(this.#state!=_state&&(this.#state==ProfileFacade.State.Dead||_state==ProfileFacade.State.Dead)){
+                    this.#alive.classList.toggle("hide")
+                    this.#dead.classList.toggle("hide")
+                }
+                this.#state=_state;
+                switch(this.#state){
+                    case ProfileFacade.State.Neutral:
+                        this.#alive.getElementsByClassName("vote")[0].innerHTML="vote"
+                        break
+                    case ProfileFacade.State.Accused:
+                        this.#alive.getElementsByClassName("vote")[0].innerHTML="unvote"
+                        break
+                }
+            }
+            get state(){
+                return this.#state;
+            }
+        }
+        class Timer{
+            basecounter = 600;
+            setCounter(x){
+                this.counter = x
+                this.display.innerText = (x/10|0)+"."+x%10+"s"
+            }
+            getCounter(){
+                return this.counter
+            }
+            subtractCounter(){
+                this.setCounter(this.getCounter()-1)
+            }
+            constructor(el){
+                this.timer = null;
+                this.start_stop = document.createElement("button")
+                this.start_stop.classList.add("stop")
+                this.start_stop.innerText="start"
+                el.appendChild(this.start_stop)
+                this.reset = document.createElement("button")
+                this.reset.classList.add("reset")
+                this.reset.innerText="reset"
+                el.appendChild(this.reset)
+                this.display = document.createElement("div")
+                this.display.classList.add("display")
+                el.appendChild(this.display)
+                this.setCounter(this.basecounter);
+                this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
+                this.reset.addEventListener("click",()=>this.timer_reset())
+            }
+            timer_start(){
+                if(this.getCounter()===0 || !(this.timer === null))this.timer_reset()
+                this.timer = setInterval((context)=>{
+                    this.subtractCounter();
+                    if(context.getCounter()===0)context.timer_stop();
+                },100,this)
+                this.start_stop.addEventListener("click",()=>this.timer_stop(),{once:true})
+                this.start_stop.innerText="stop"
+            }
+            timer_stop(){
+                clearInterval(this.timer)
+                this.timer=null
+                this.start_stop.addEventListener("click",()=>this.timer_start(),{once:true})
+                this.start_stop.innerText="start"
+            }
+            timer_reset(){
+                if(!(this.timer === null)){
+                    this.start_stop.dispatchEvent(new Event("click"))
+                }
+                this.setCounter(this.basecounter);
+            }
+        }
+        let serv = new GameServer(new GameConfig(),SimpleProfileFacade, SimpleElectionFacade)
+        document.getElementById("flip").addEventListener("click",(event)=>{
+            let counter=0
+            let profiles = Array.from(document.getElementsByClassName("profile")).filter((x)=>x.style.display!="none")
+            profiles.forEach((e)=>{
+                if(e.classList.contains("reverse")){
+                    e.dispatchEvent(new Event("click"))
+                    counter+=1    
+                }
+            })
+            if(counter>0)return
+            profiles.forEach((e)=>{
+                e.dispatchEvent(new Event("click"))
+                counter+=1
+            })
+        })
+        new Timer(document.getElementsByClassName("timer")[0])
+        document.getElementById("restart").addEventListener("click",(event)=>{
+            serv.dispose()
+            serv = new GameServer(new GameConfig(),SimpleProfileFacade, SimpleElectionFacade)
+        })
     </script>
-</div>
 </body>
 </html>
